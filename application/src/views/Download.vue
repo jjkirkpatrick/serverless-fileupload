@@ -94,7 +94,6 @@ export default {
       this.$http
         .get("https://api.jjkirk.com/get/" + this.$route.params.download)
         .then((result) => {
-          console.log(result.data);
           this.file = JSON.parse(result.data.body);
         })
         .catch((result) => {

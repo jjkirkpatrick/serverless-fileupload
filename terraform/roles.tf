@@ -9,8 +9,6 @@ data "aws_iam_role" "chalice" {
 
 data "aws_iam_policy_document" "fileuploader" {
   statement {
-    sid = "1"
-
     actions = [
       "dynamodb:GetItem",
       "dynamodb:PutItem",
@@ -25,8 +23,16 @@ data "aws_iam_policy_document" "fileuploader" {
   }
 
   statement {
-    sid = "2"
+    actions = [
+      "kms:*"
+    ]
 
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
     actions = [
       "s3:*",
     ]
@@ -37,8 +43,8 @@ data "aws_iam_policy_document" "fileuploader" {
   }
 }
 
-resource "aws_iam_policy" "example" {
-  name   = "fileuploaderpolicy"
+resource "aws_iam_policy" "uploader_policy" {
+  name   = "serverless_file_uploader"
   path   = "/"
   policy = data.aws_iam_policy_document.fileuploader.json
 
@@ -51,7 +57,7 @@ resource "aws_iam_policy" "example" {
 resource "aws_iam_policy_attachment" "test-attach" {
   name       = "test-attachment"
   roles      = [data.aws_iam_role.chalice.name]
-  policy_arn = aws_iam_policy.example.arn
+  policy_arn = aws_iam_policy.uploader_policy.arn
 
   depends_on = [
     aws_iam_role.default-role,

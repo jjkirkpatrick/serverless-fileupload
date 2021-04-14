@@ -211,7 +211,6 @@ export default {
                 this.uploadPercentage = Math.round(
                   (progressEvent.loaded * 100) / progressEvent.total
                 );
-                console.log(this.uploadPercentage);
               }.bind(this),
             })
             .then((response) => {
