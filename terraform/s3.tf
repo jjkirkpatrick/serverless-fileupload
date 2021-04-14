@@ -40,10 +40,6 @@ module "s3_bucket" {
   }
 }
 
-###########################
-##### Uploaded assets #####
-###########################
-
 data "aws_iam_policy_document" "website_bucket_policy" {
   statement {
     principals {
@@ -56,10 +52,15 @@ data "aws_iam_policy_document" "website_bucket_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::jjkirk.com/*",
+      "arn:aws:s3:::${var.website_bucket_name}/*",
     ]
   }
 }
+
+###########################
+##### Uploaded assets #####
+###########################
+
 
 
 resource "aws_kms_key" "uploaded_assets" {
@@ -80,7 +81,7 @@ module "s3_bucket_file_storage" {
   cors_rule = [
     {
       allowed_methods = ["POST"]
-      allowed_origins = ["https://jjkirk.com", "http://jjkirk.com"]
+      allowed_origins = ["https://${var.domain_name}", "http://${var.domain_name}"]
       allowed_headers = ["*"]
       expose_headers  = []
       }
@@ -105,7 +106,7 @@ module "s3_bucket_file_storage" {
 resource "random_id" "upload_bucket" {
   keepers = {
     # Generate a new id each time we switch to a new AMI id
-    bucket = "${var.uploaded_files_bucket_name}"
+    bucket = var.uploaded_files_bucket_name
   }
 
   byte_length = 8
