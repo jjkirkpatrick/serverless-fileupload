@@ -25,7 +25,7 @@
         <v-col cols="12" sm="8" md="4">
           <v-card :loading="uploading" class="elevation-12">
             <v-toolbar color="grey" dark flat>
-              <v-toolbar-title>test File Upload</v-toolbar-title>
+              <v-toolbar-title>File Upload</v-toolbar-title>
             </v-toolbar>
 
             <v-divider></v-divider>
@@ -88,15 +88,15 @@
                   dark
                 >
                   <p class="text-center ma-0">
-                    Please wait whilst your file uploads
+                    Please wait while your file uploads
                     <v-progress-circular
                       :size="70"
                       :width="7"
                       color="primary"
                       :value="uploadPercentage"
                       :rotate="-90"
-                      >{{ uploadPercentage }}%</v-progress-circular
-                    >
+                      >{{ uploadPercentage }}%
+                    </v-progress-circular>
                   </p>
                 </v-alert>
               </transition>
@@ -123,7 +123,7 @@
             class="madeBy font-weight-thin text--disabled text-right"
           >
             Made with
-            <v-icon size="10" color="red" dense>fa-heart</v-icon>by Joshua
+            <v-icon size="10" color="red" dense>fa-heart</v-icon>by Josh
             Kirkpatrick
           </v-col>
         </v-col>
@@ -209,8 +209,9 @@ export default {
             .post(JSON.parse(result.data.body).key.url, formData, {
               onUploadProgress: function (progressEvent) {
                 this.uploadPercentage = Math.round(
-                  (progressEvent.loaded / progressEvent.total) * 100
+                  (progressEvent.loaded * 100) / progressEvent.total
                 );
+                console.log(this.uploadPercentage);
               }.bind(this),
             })
             .then((response) => {

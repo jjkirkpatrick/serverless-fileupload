@@ -8,7 +8,7 @@ module.exports = {
       registry: undefined,
       awsProfile: 'default',
       region: 'eu-west-1',
-      bucket: '', //specify bucket values here
+      bucket: 'jjkirk.com', //specify bucket values
       createBucket: true,
       staticHosting: true,
       staticIndexPage: 'index.html',

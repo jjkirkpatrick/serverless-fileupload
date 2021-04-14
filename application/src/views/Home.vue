@@ -1,15 +1,15 @@
 <template>
-  <HelloWorld />
+  <upload />
 </template>
 
 <script>
 // @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
+import upload from "@/components/upload.vue";
 
 export default {
   name: "Home",
   components: {
-    HelloWorld
-  }
+    upload,
+  },
 };
 </script>

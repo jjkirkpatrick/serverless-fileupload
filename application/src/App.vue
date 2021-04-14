@@ -3,7 +3,7 @@
     <v-app-bar fixed app color="primary" dark>
       <div class="d-flex align-center">
         <v-btn
-          href="https://jjkirk.com"
+          href="http://jjkirk.com"
           target="_blank"
           text
           class="shrink mt-1 hidden-sm-and-down"
@@ -14,7 +14,11 @@
 
       <v-spacer></v-spacer>
 
-      <v-btn href="https://github.com/jjkirkpatrick/serverless-fileupload" target="_blank" text>
+      <v-btn
+        href="https://github.com/jjkirkpatrick/serverless-fileupload"
+        target="_blank"
+        text
+      >
         <span class="mr-2">Github</span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
@@ -40,6 +44,6 @@ export default {
 
   data: () => ({
     //
-  })
+  }),
 };
 </script>
