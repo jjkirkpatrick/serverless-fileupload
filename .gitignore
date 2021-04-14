@@ -322,4 +322,5 @@ test/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,vue
 chalice/help
+chalice/.chalice
 terraform/chalice.tf.json
