@@ -324,3 +324,4 @@ test/
 chalice/help
 chalice/.chalice
 terraform/chalice.tf.json
+terraform/deployment.zip
