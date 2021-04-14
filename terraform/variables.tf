@@ -1,4 +1,18 @@
+variable "create_website_route53_record" {
+  type        = bool
+  default     = true
+}
+
+variable "create_api_route53_record" {
+  type        = bool
+  default     = true
+}
+
 variable "domain_name" {
+  type        = string
+}
+
+variable "api_subdomain" {
   type        = string
 }
 

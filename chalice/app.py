@@ -10,7 +10,7 @@ from boto3.dynamodb.conditions import Key, Attr
 
 app = Chalice(app_name='fileUpload')
 
-FILE_UPLOAD_BUCKET = "Enter bucket name"
+FILE_UPLOAD_BUCKET = "serverless-fileupload-0721ce2b1a35f614"
 
 
 @app.route('/')
@@ -26,7 +26,7 @@ def index():
            )
 def upload():
     s3_client = boto3.client(
-        's3', 'eu-west-2', config=Config(s3={'addressing_style': 'path'}))
+        's3', config=Config(signature_version='s3v4', s3={'addressing_style': 'path'}))
 
     filename = str(app.current_request.query_params.get('filename'))
     filesize = app.current_request.query_params.get('filesize')
@@ -170,7 +170,7 @@ def setItemMetadata(uri, key, value):
 
 def getS3PreSignedURL(s3Bucket, objectKey):
     s3client = boto3.client(
-        's3', 'eu-west-2', config=Config(signature_version='s3v4'))
+        's3', config=Config(signature_version='s3v4'))
 
     try:
         preSignedKey = s3client.generate_presigned_url('get_object',
