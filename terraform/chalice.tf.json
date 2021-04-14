@@ -1,0 +1,178 @@
+{
+  "resource": {
+    "aws_iam_role": {
+      "default-role": {
+        "name": "fileUpload-dev",
+        "assume_role_policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"\", \"Effect\": \"Allow\", \"Principal\": {\"Service\": \"lambda.amazonaws.com\"}, \"Action\": \"sts:AssumeRole\"}]}"
+      }
+    },
+    "aws_iam_role_policy": {
+      "default-role": {
+        "name": "default-rolePolicy",
+        "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogGroup\", \"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"arn:*:logs:*:*:*\"}, {\"Effect\": \"Allow\", \"Action\": [\"xray:PutTraceSegments\", \"xray:PutTelemetryRecords\"], \"Resource\": \"*\"}]}",
+        "role": "${aws_iam_role.default-role.id}"
+      }
+    },
+    "aws_lambda_function": {
+      "cleanup": {
+        "function_name": "fileUpload-dev-cleanup",
+        "runtime": "python3.8",
+        "handler": "app.cleanup",
+        "memory_size": 128,
+        "tags": {
+          "aws-chalice": "version=1.22.3:stage=dev:app=fileUpload"
+        },
+        "timeout": 60,
+        "source_code_hash": "${filebase64sha256(\"${path.module}/deployment.zip\")}",
+        "filename": "${path.module}/deployment.zip",
+        "tracing_config": {
+          "mode": "Active"
+        },
+        "role": "${aws_iam_role.default-role.arn}"
+      },
+      "api_handler": {
+        "function_name": "fileUpload-dev",
+        "runtime": "python3.8",
+        "handler": "app.app",
+        "memory_size": 128,
+        "tags": {
+          "aws-chalice": "version=1.22.3:stage=dev:app=fileUpload"
+        },
+        "timeout": 60,
+        "source_code_hash": "${filebase64sha256(\"${path.module}/deployment.zip\")}",
+        "filename": "${path.module}/deployment.zip",
+        "tracing_config": {
+          "mode": "Active"
+        },
+        "role": "${aws_iam_role.default-role.arn}"
+      }
+    },
+    "aws_cloudwatch_event_rule": {
+      "cleanup-event": {
+        "name": "cleanup-event",
+        "schedule_expression": "rate(1 hour)",
+        "description": ""
+      }
+    },
+    "aws_cloudwatch_event_target": {
+      "cleanup-event": {
+        "rule": "${aws_cloudwatch_event_rule.cleanup-event.name}",
+        "target_id": "cleanup-event",
+        "arn": "${aws_lambda_function.cleanup.arn}"
+      }
+    },
+    "aws_lambda_permission": {
+      "cleanup-event": {
+        "function_name": "${aws_lambda_function.cleanup.arn}",
+        "action": "lambda:InvokeFunction",
+        "principal": "events.amazonaws.com",
+        "source_arn": "${aws_cloudwatch_event_rule.cleanup-event.arn}"
+      },
+      "rest_api_invoke": {
+        "function_name": "${aws_lambda_function.api_handler.arn}",
+        "action": "lambda:InvokeFunction",
+        "principal": "apigateway.amazonaws.com",
+        "source_arn": "${aws_api_gateway_rest_api.rest_api.execution_arn}/*"
+      }
+    },
+    "aws_api_gateway_rest_api": {
+      "rest_api": {
+        "body": "${data.template_file.chalice_api_swagger.rendered}",
+        "name": "fileUpload",
+        "binary_media_types": [
+          "application/octet-stream",
+          "application/x-tar",
+          "application/zip",
+          "audio/basic",
+          "audio/ogg",
+          "audio/mp4",
+          "audio/mpeg",
+          "audio/wav",
+          "audio/webm",
+          "image/png",
+          "image/jpg",
+          "image/jpeg",
+          "image/gif",
+          "video/ogg",
+          "video/mpeg",
+          "video/webm"
+        ],
+        "endpoint_configuration": {
+          "types": [
+            "EDGE"
+          ]
+        }
+      }
+    },
+    "aws_api_gateway_deployment": {
+      "rest_api": {
+        "stage_name": "api",
+        "stage_description": "${md5(data.template_file.chalice_api_swagger.rendered)}",
+        "rest_api_id": "${aws_api_gateway_rest_api.rest_api.id}",
+        "lifecycle": {
+          "create_before_destroy": true
+        }
+      }
+    },
+    "aws_api_gateway_domain_name": {
+      "api_gateway_custom_domain": {
+        "domain_name": "<Add domain here>",
+        "endpoint_configuration": {
+          "types": [
+            "EDGE"
+          ]
+        },
+        "certificate_arn": "arn:aws:acm:us-east-1:956613166899:certificate/d1ecc2b4-8e25-4d6b-a64a-d9fb5c171061",
+        "security_policy": "TLS_1_2"
+      }
+    },
+    "aws_api_gateway_base_path_mapping": {
+      "api_gateway_custom_domain_mapping": {
+        "stage_name": "api",
+        "domain_name": "<Add domain here>",
+        "api_id": "${aws_api_gateway_rest_api.rest_api.id}"
+      }
+    }
+  },
+  "terraform": {
+    "required_version": "> 0.11.0, < 0.15.0"
+  },
+  "data": {
+    "aws_caller_identity": {
+      "chalice": {}
+    },
+    "aws_partition": {
+      "chalice": {}
+    },
+    "aws_region": {
+      "chalice": {}
+    },
+    "null_data_source": {
+      "chalice": {
+        "inputs": {
+          "app": "fileUpload",
+          "stage": "dev"
+        }
+      }
+    },
+    "template_file": {
+      "chalice_api_swagger": {
+        "template": "{\"swagger\": \"2.0\", \"info\": {\"version\": \"1.0\", \"title\": \"fileUpload\"}, \"schemes\": [\"https\"], \"paths\": {\"/\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}}, \"/presignpost\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}}, \"options\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}, \"headers\": {\"Access-Control-Allow-Methods\": {\"type\": \"string\"}, \"Access-Control-Allow-Origin\": {\"type\": \"string\"}, \"Access-Control-Allow-Headers\": {\"type\": \"string\"}}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\", \"responseParameters\": {\"method.response.header.Access-Control-Allow-Methods\": \"'GET,OPTIONS'\", \"method.response.header.Access-Control-Allow-Origin\": \"'*'\", \"method.response.header.Access-Control-Allow-Headers\": \"'Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key'\"}}}, \"requestTemplates\": {\"application/json\": \"{\\\"statusCode\\\": 200}\"}, \"passthroughBehavior\": \"when_no_match\", \"type\": \"mock\", \"contentHandling\": \"CONVERT_TO_TEXT\"}}}, \"/get/{item}\": {\"get\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\"}}, \"uri\": \"${aws_lambda_function.api_handler.invoke_arn}\", \"passthroughBehavior\": \"when_no_match\", \"httpMethod\": \"POST\", \"contentHandling\": \"CONVERT_TO_TEXT\", \"type\": \"aws_proxy\"}, \"parameters\": [{\"name\": \"item\", \"in\": \"path\", \"required\": true, \"type\": \"string\"}]}, \"options\": {\"consumes\": [\"application/json\"], \"produces\": [\"application/json\"], \"responses\": {\"200\": {\"description\": \"200 response\", \"schema\": {\"$ref\": \"#/definitions/Empty\"}, \"headers\": {\"Access-Control-Allow-Methods\": {\"type\": \"string\"}, \"Access-Control-Allow-Origin\": {\"type\": \"string\"}, \"Access-Control-Allow-Headers\": {\"type\": \"string\"}}}}, \"x-amazon-apigateway-integration\": {\"responses\": {\"default\": {\"statusCode\": \"200\", \"responseParameters\": {\"method.response.header.Access-Control-Allow-Methods\": \"'GET,OPTIONS'\", \"method.response.header.Access-Control-Allow-Origin\": \"'*'\", \"method.response.header.Access-Control-Allow-Headers\": \"'Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key'\"}}}, \"requestTemplates\": {\"application/json\": \"{\\\"statusCode\\\": 200}\"}, \"passthroughBehavior\": \"when_no_match\", \"type\": \"mock\", \"contentHandling\": \"CONVERT_TO_TEXT\"}}}}, \"definitions\": {\"Empty\": {\"type\": \"object\", \"title\": \"Empty Schema\"}}, \"x-amazon-apigateway-binary-media-types\": [\"application/octet-stream\", \"application/x-tar\", \"application/zip\", \"audio/basic\", \"audio/ogg\", \"audio/mp4\", \"audio/mpeg\", \"audio/wav\", \"audio/webm\", \"image/png\", \"image/jpg\", \"image/jpeg\", \"image/gif\", \"video/ogg\", \"video/mpeg\", \"video/webm\"]}"
+      }
+    }
+  },
+  "output": {
+    "EndpointURL": {
+      "value": "${aws_api_gateway_deployment.rest_api.invoke_url}"
+    },
+    "RestAPIId": {
+      "value": "${aws_api_gateway_rest_api.rest_api.id}"
+    },
+    "AliasDomainName": {
+      "value": "${aws_api_gateway_domain_name.api_gateway_custom_domain.cloudfront_domain_name}"
+    },
+    "HostedZoneId": {
+      "value": "${aws_api_gateway_domain_name.api_gateway_custom_domain.cloudfront_zone_id}"
+    }
+  }
+}

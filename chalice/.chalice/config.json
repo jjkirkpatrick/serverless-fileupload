@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "app_name": "fileUpload",
+  "xray": true,
+  "lambda_functions": {
+    "upload": {
+      "lambda_timeout": 120
+    },
+    "get": {
+      "lambda_timeout": 120
+    }
+  },
+  "stages": {
+    "dev": {
+      "api_gateway_stage": "api",
+      "api_gateway_custom_domain": {
+        "domain_name": "<Add domain here>",
+        "tls_version": "TLS_1_2|TLS_1_0",
+        "certificate_arn": "arn:aws:acm:us-east-1:956613166899:certificate/d1ecc2b4-8e25-4d6b-a64a-d9fb5c171061"
+      }
+    }
+  }
+}
